@@ -2,6 +2,8 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import pulsectl
+import sounddevice as sd
+from scipy.io.wavfile import read
 
 # ------------------------------
 # INITIALIZATION
@@ -24,6 +26,13 @@ def set_volume(vol_fraction):
     """
     if sink is not None:
         pulse.volume_set_all_chans(sink, vol_fraction)
+
+# Load the sample audio file
+sample_rate, audio_data = read("sample.wav")
+
+def play_audio():
+    sd.play(audio_data, samplerate=sample_rate)
+    sd.wait()
 
 # ------------------------------
 # INITIAL STORED VALUES
@@ -56,6 +65,7 @@ def adjust_pitch(pitch_value):
 # ------------------------------
 
 cap = cv2.VideoCapture(0)
+play_audio()
 
 while True:
     success, img = cap.read()
@@ -127,14 +137,6 @@ while True:
                 cv2.line(img, index_tip_hand1, index_tip_hand2, (0, 0, 255), 3)
                 cv2.circle(img, index_tip_hand1, 8, (0, 255, 255), cv2.FILLED)
                 cv2.circle(img, index_tip_hand2, 8, (0, 255, 255), cv2.FILLED)
-
-    # If no update this frame, display the stored values
-    if not update_volume:
-        cv2.putText(img, f'Volume: {int(current_volume_percent)}%', (50, 50),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-    if not update_pitch:
-        cv2.putText(img, f'Pitch: {current_pitch:.2f}', (50, 100),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
     # Show the video feed
     cv2.imshow('AirTune: Hands-Free Audio Control', img)
